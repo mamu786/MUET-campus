@@ -1,0 +1,787 @@
+:root {
+  --ink: #1e242b;
+  --paper: #f8fafc;
+  --ward-yellow: #ffd026;
+  --ward-pink: #ff94c2;
+  --ward-red: #e63946;
+  --ward-teal: #7dd3c0;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: 'Courier New', 'Consolas', monospace, system-ui;
+}
+
+body {
+  background: #5b6770;
+  color: var(--ink);
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+  user-select: none;
+}
+
+#game-wrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+#gameCanvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* =========================================================================
+   TOP-LEFT CAMPUS GPS MINI-MAP & DOOR FLASH BANNER
+   ========================================================================= */
+#minimap-card {
+  position: absolute;
+  top: 14px;
+  left: 16px;
+  width: 390px;
+  z-index: 25;
+  background: #ffffff;
+}
+
+.minimap-bar {
+  position: relative;
+  height: 36px;
+  background: #cbd5e1;
+  border-bottom: 2px solid var(--ink);
+  margin: 0;
+  overflow: hidden;
+}
+
+.mm-landmark {
+  position: absolute;
+  top: 6px;
+  transform: translateX(-50%);
+  font-family: 'Segoe UI', sans-serif;
+  font-size: 10px;
+  font-weight: 900;
+  background: #fffbeb;
+  border: 1.5px solid var(--ink);
+  padding: 2px 5px;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+
+#mm-player-dot {
+  position: absolute;
+  bottom: 2px;
+  left: 42%;
+  width: 12px;
+  height: 12px;
+  background: var(--ward-red);
+  border: 2px solid #ffffff;
+  outline: 2px solid var(--ink);
+  border-radius: 50%;
+  transform: translateX(-50%);
+  transition: left 0.08s linear;
+}
+
+.mm-hint {
+  padding: 5px 10px;
+  font-family: 'Segoe UI', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  background: #f8fafc;
+  color: #334155;
+}
+
+#zone-banner {
+  position: absolute;
+  top: 85px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--ward-yellow);
+  color: var(--ink);
+  border: 3.5px solid var(--ink);
+  box-shadow: 5px 6px 0 var(--ink);
+  padding: 10px 24px;
+  border-radius: 12px;
+  font-family: 'Segoe UI', sans-serif;
+  font-weight: 900;
+  font-size: 16px;
+  z-index: 40;
+  pointer-events: none;
+}
+
+/* =========================================================================
+   WARDRUN-STYLE LEFT TITLE OVERLAY (Cutout Block Letters + Chunky Ink UI)
+   ========================================================================= */
+#title-overlay {
+  position: absolute;
+  top: 24%;
+  left: 32px;
+  z-index: 20;
+  max-width: 520px;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+#title-overlay.minimized {
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(-40px);
+}
+
+.logo-block {
+  margin-bottom: 18px;
+}
+
+.block-letters {
+  display: flex;
+  gap: 5px;
+  margin-bottom: 12px;
+}
+
+.block-letters span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 64px;
+  background: #ffffff;
+  color: var(--ink);
+  font-family: 'Arial Black', Impact, sans-serif;
+  font-size: 38px;
+  font-weight: 900;
+  border: 3.5px solid var(--ink);
+  box-shadow: 5px 6px 0px var(--ink);
+}
+
+.block-letters span:nth-child(odd) {
+  transform: rotate(-3deg);
+}
+
+.block-letters span:nth-child(even) {
+  transform: rotate(2.5deg) translateY(3px);
+}
+
+.logo-sub {
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  font-weight: 900;
+  font-size: 13.5px;
+  color: #ffffff;
+  letter-spacing: 0.5px;
+  line-height: 1.45;
+  text-shadow:
+    -2px -2px 0 var(--ink),
+     2px -2px 0 var(--ink),
+    -2px  2px 0 var(--ink),
+     2px  2px 0 var(--ink),
+     0px  3px 0 var(--ink);
+}
+
+.menu-buttons-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.ward-btn {
+  font-family: 'Courier New', monospace;
+  font-weight: 900;
+  letter-spacing: 2px;
+  border: 3.5px solid var(--ink);
+  border-radius: 10px;
+  box-shadow: 4px 5px 0px var(--ink);
+  cursor: pointer;
+  transition: transform 0.1s, box-shadow 0.1s;
+}
+
+.ward-btn:hover {
+  transform: translate(-1px, -2px);
+  box-shadow: 6px 7px 0px var(--ink);
+}
+
+.ward-btn:active {
+  transform: translate(3px, 3px);
+  box-shadow: 1px 2px 0px var(--ink);
+}
+
+.yellow-main {
+  background: var(--ward-yellow);
+  color: var(--ink);
+  font-size: 23px;
+  padding: 15px 54px;
+}
+
+.coop-wrap {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.chaos-tag {
+  position: absolute;
+  top: -13px;
+  background: var(--ward-red);
+  color: #fff;
+  font-family: 'Segoe UI', sans-serif;
+  font-size: 10px;
+  font-weight: 900;
+  padding: 2px 8px;
+  border: 2px solid var(--ink);
+  border-radius: 5px;
+  transform: rotate(4deg);
+  z-index: 2;
+  box-shadow: 2px 2px 0 var(--ink);
+}
+
+.pink-sub {
+  background: var(--ward-pink);
+  color: var(--ink);
+  font-size: 15px;
+  padding: 17px 22px;
+}
+
+.yellow-sm {
+  background: var(--ward-yellow);
+  color: var(--ink);
+  font-size: 14px;
+  padding: 10px 20px;
+}
+
+.sub-pills-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.ward-pill {
+  background: #ffffff;
+  color: var(--ink);
+  font-family: 'Segoe UI', sans-serif;
+  font-weight: 800;
+  font-size: 12.5px;
+  padding: 8px 13px;
+  border: 2.5px solid var(--ink);
+  border-radius: 8px;
+  box-shadow: 3px 4px 0px var(--ink);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: transform 0.1s;
+}
+
+.ward-pill:hover {
+  transform: translateY(-2px);
+}
+
+.ward-pill:nth-child(4) {
+  background: #ffe066;
+}
+
+.rm-tag {
+  background: #d1fae5;
+  color: #065f46;
+  border: 1.5px solid var(--ink);
+  padding: 1px 6px;
+  border-radius: 5px;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+/* =========================================================================
+   TOP RIGHT WARDRUN "EXPLORE" TOGGLE & CHECKLIST
+   ========================================================================= */
+#top-right-hud {
+  position: absolute;
+  top: 14px;
+  right: 16px;
+  z-index: 25;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 12px;
+}
+
+.explore-toggle-pill {
+  background: #ffffff;
+  border: 3px solid var(--ink);
+  border-radius: 12px;
+  padding: 7px 14px;
+  box-shadow: 4px 5px 0px var(--ink);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  cursor: pointer;
+}
+
+.et-title {
+  font-family: 'Segoe UI', sans-serif;
+  font-weight: 900;
+  font-size: 12px;
+  color: var(--ink);
+}
+
+.et-sub {
+  font-family: 'Segoe UI', sans-serif;
+  font-size: 10.5px;
+  color: #64748b;
+  font-weight: 700;
+}
+
+.toggle-switch {
+  width: 44px;
+  height: 24px;
+  background: #e2e8f0;
+  border: 2.5px solid var(--ink);
+  border-radius: 999px;
+  position: relative;
+  transition: background 0.2s;
+}
+
+.toggle-switch.active {
+  background: var(--ward-teal);
+}
+
+.toggle-knob {
+  width: 15px;
+  height: 15px;
+  background: #ffffff;
+  border: 2px solid var(--ink);
+  border-radius: 50%;
+  position: absolute;
+  top: 2px;
+  left: 3px;
+  transition: transform 0.2s;
+}
+
+.toggle-switch.active .toggle-knob {
+  transform: translateX(19px);
+}
+
+/* SKETCH CHECKLIST CARD */
+.sketch-card {
+  width: 300px;
+  background: #fffbeb;
+  border: 3px solid var(--ink);
+  border-radius: 10px;
+  box-shadow: 4px 5px 0px var(--ink);
+  overflow: hidden;
+}
+
+.sketch-card-header {
+  background: var(--ward-yellow);
+  border-bottom: 2.5px solid var(--ink);
+  padding: 7px 12px;
+  font-family: 'Segoe UI', sans-serif;
+  font-weight: 900;
+  font-size: 12px;
+}
+
+#quest-list {
+  list-style: none;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  font-family: 'Segoe UI', sans-serif;
+  font-size: 12px;
+}
+
+#quest-list li {
+  padding: 5px 8px;
+  background: #ffffff;
+  border: 2px solid var(--ink);
+  border-radius: 6px;
+}
+
+#quest-list li.done {
+  background: #dcfce7;
+  text-decoration: line-through;
+  opacity: 0.7;
+}
+
+/* FLOATING INTERACT PROMPT */
+#interact-prompt {
+  position: absolute;
+  bottom: 155px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--ward-yellow);
+  border: 3px solid var(--ink);
+  box-shadow: 4px 5px 0px var(--ink);
+  color: var(--ink);
+  padding: 8px 18px;
+  border-radius: 10px;
+  font-family: 'Segoe UI', sans-serif;
+  font-weight: 900;
+  font-size: 14px;
+  z-index: 25;
+  pointer-events: none;
+}
+
+kbd {
+  background: #ffffff;
+  border: 2px solid var(--ink);
+  border-radius: 4px;
+  padding: 1px 6px;
+  font-size: 12px;
+}
+
+/* DIALOGUE BOX */
+#dialogue-box {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(740px, 92vw);
+  background: #ffffff;
+  border: 3.5px solid var(--ink);
+  box-shadow: 6px 8px 0px var(--ink);
+  border-radius: 14px;
+  padding: 16px 20px;
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  z-index: 35;
+  font-family: 'Segoe UI', sans-serif;
+}
+
+.dialogue-avatar {
+  width: 58px;
+  height: 58px;
+  border-radius: 12px;
+  background: var(--ward-yellow);
+  border: 3px solid var(--ink);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 30px;
+  flex-shrink: 0;
+}
+
+.dialogue-content {
+  flex: 1;
+}
+
+.dialogue-name {
+  font-weight: 900;
+  color: var(--ink);
+  font-size: 15px;
+  margin-bottom: 4px;
+}
+
+.dialogue-text {
+  font-size: 14px;
+  line-height: 1.5;
+  color: #334155;
+  margin-bottom: 12px;
+}
+
+.dialogue-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.dlg-btn {
+  background: var(--ward-yellow);
+  color: var(--ink);
+  border: 2.5px solid var(--ink);
+  box-shadow: 3px 3px 0px var(--ink);
+  padding: 7px 14px;
+  border-radius: 8px;
+  font-family: 'Segoe UI', sans-serif;
+  font-weight: 800;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.dlg-btn.secondary {
+  background: #e2e8f0;
+}
+
+/* MODALS */
+.modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(30, 36, 43, 0.72);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+  padding: 18px;
+}
+
+.hidden {
+  display: none !important;
+}
+
+.sketch-modal {
+  width: min(960px, 95vw);
+  max-height: 88vh;
+  background: #ffffff;
+  border: 4px solid var(--ink);
+  box-shadow: 8px 10px 0px var(--ink);
+  border-radius: 16px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  font-family: 'Segoe UI', sans-serif;
+}
+
+.sketch-header {
+  padding: 12px 18px;
+  border-bottom: 3.5px solid var(--ink);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: 900;
+  font-size: 14px;
+}
+
+.yellow-bar { background: var(--ward-yellow); }
+.pink-bar { background: var(--ward-pink); }
+.teal-bar { background: var(--ward-teal); }
+
+.close-btn {
+  background: var(--ward-red);
+  color: #fff;
+  border: 2.5px solid var(--ink);
+  box-shadow: 2px 2px 0 var(--ink);
+  width: 30px;
+  height: 30px;
+  border-radius: 6px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.phone-body, .essay-body {
+  padding: 16px;
+  overflow-y: auto;
+  display: grid;
+  grid-template-columns: 1fr 1.25fr;
+  gap: 16px;
+}
+
+.incoming-email, .topic-card, .collected-cards-box, .peel-guide {
+  background: #f8fafc;
+  border: 2.5px solid var(--ink);
+  border-radius: 10px;
+  padding: 12px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.email-meta {
+  padding-bottom: 8px;
+  margin-bottom: 8px;
+  border-bottom: 2px dashed #cbd5e1;
+}
+
+.prompt-note {
+  background: #fef9c3;
+  border: 2px solid var(--ink);
+  padding: 7px 9px;
+  border-radius: 6px;
+  margin: 8px 0;
+  font-size: 12px;
+}
+
+.writing-workspace, .essay-editor-col, .essay-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.scaffold-box {
+  background: #f0fdf4;
+  border: 2px dashed var(--ink);
+  padding: 9px;
+  border-radius: 8px;
+}
+
+.scaffold-title {
+  font-size: 12px;
+  font-weight: 800;
+  margin-bottom: 6px;
+}
+
+.chip-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.phrase-chip {
+  background: #ffffff;
+  color: var(--ink);
+  border: 2px solid var(--ink);
+  box-shadow: 2px 2px 0 var(--ink);
+  padding: 5px 9px;
+  border-radius: 6px;
+  font-size: 11.5px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.phrase-chip:hover {
+  background: var(--ward-yellow);
+}
+
+textarea {
+  width: 100%;
+  min-height: 185px;
+  background: #fffef8;
+  color: var(--ink);
+  border: 3px solid var(--ink);
+  border-radius: 10px;
+  padding: 12px;
+  font-family: 'Segoe UI', sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  resize: vertical;
+}
+
+.workspace-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.live-metrics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.metric-badge, .check-pill {
+  font-size: 11.5px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  background: #f1f5f9;
+  border: 2px solid var(--ink);
+  font-weight: 800;
+}
+
+.check-pill.ok {
+  background: #bbf7d0;
+}
+
+.feedback-panel {
+  background: #fef9c3;
+  border: 2.5px solid var(--ink);
+  border-radius: 8px;
+  padding: 10px;
+  font-size: 13px;
+}
+
+.idea-card-item {
+  background: #fffbeb;
+  border: 2px solid var(--ink);
+  box-shadow: 2px 2px 0 var(--ink);
+  border-radius: 6px;
+  padding: 7px;
+  margin-top: 6px;
+  cursor: pointer;
+}
+
+.notebook-body {
+  padding: 18px;
+  overflow-y: auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 14px;
+}
+
+/* STAGE TABS & INTERACTIVE MINI-GAME CARDS */
+.stage-tabs {
+  display: flex;
+  background: #f1f5f9;
+  border-bottom: 3px solid var(--ink);
+}
+
+.stage-tab {
+  flex: 1;
+  padding: 10px 12px;
+  font-family: 'Segoe UI', sans-serif;
+  font-weight: 900;
+  font-size: 12.5px;
+  background: #e2e8f0;
+  color: #475569;
+  border: none;
+  border-right: 2.5px solid var(--ink);
+  cursor: pointer;
+}
+
+.stage-tab:last-child {
+  border-right: none;
+}
+
+.stage-tab.active {
+  background: #ffffff;
+  color: var(--ink);
+  box-shadow: inset 0 -4px 0 var(--ward-yellow);
+}
+
+.stage-pane {
+  padding: 16px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.quiz-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.quiz-card {
+  background: #f8fafc;
+  border: 2.5px solid var(--ink);
+  border-radius: 10px;
+  padding: 12px;
+}
+
+.quiz-q {
+  font-weight: 800;
+  font-size: 13.5px;
+  margin-bottom: 8px;
+  color: var(--ink);
+}
+
+.quiz-options {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.quiz-opt-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 10px;
+  background: #ffffff;
+  border: 2px solid #cbd5e1;
+  border-radius: 7px;
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.12s;
+}
+
+.quiz-opt-label:hover {
+  border-color: var(--ink);
+  background: #fffbeb;
+}
+
+.quiz-opt-label input {
+  accent-color: var(--ink);
+  transform: scale(1.15);
+}

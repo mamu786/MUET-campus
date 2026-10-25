@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SISWARUN: MUET Chronicles (Open-World Campus)</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <!-- MAIN GAME CANVAS -->
+  <div id="game-wrapper">
+    <canvas id="gameCanvas"></canvas>
+
+    <!-- DOOR TRANSITION FLASH BANNER -->
+    <div id="zone-banner" class="hidden">📍 ENTERING DEWAN KULIAH 3A</div>
+
+    <!-- TOP-LEFT CAMPUS GPS MINI-MAP -->
+    <div id="minimap-card" class="sketch-card">
+      <div class="sketch-card-header">
+        <span id="current-zone-label">🗺️ CAMPUS BOULEVARD (3D CEL-SHADED)</span>
+      </div>
+      <div class="minimap-bar" id="minimap-bar">
+        <div class="mm-landmark" style="left: 14%" title="HEPA Student Hub (Part 1)">🏢 HEPA</div>
+        <div class="mm-landmark" style="left: 42%" title="Dewan Kuliah 3A (Part 2)">🏛️ DEWAN</div>
+        <div class="mm-landmark" style="left: 68%" title="Kafe Siswa (Idea Cards)">🍛 KAFE</div>
+        <div class="mm-landmark" style="left: 90%" title="Perpustakaan (PEEL Snowball)">📚 LIB</div>
+        <div id="mm-player-dot"></div>
+      </div>
+      <div class="mm-hint">🚶 Walk Left/Right (<kbd>A</kbd>/<kbd>D</kbd>) • Walk Forward (<kbd>W</kbd>) into building doors!</div>
+    </div>
+
+    <!-- WARDRUN-STYLE TITLE SCREEN OVERLAY -->
+    <div id="title-overlay">
+      <div class="logo-block">
+        <div class="block-letters">
+          <span>S</span><span>I</span><span>S</span><span>W</span><span>A</span><span>R</span><span>U</span><span>N</span>
+        </div>
+        <p class="logo-sub">MUET WRITING AT KOLEJ 3A: DIAGNOSTIC PLACEMENT, GRAMMAR FIXER &amp; PEEL SNOWBALL!</p>
+      </div>
+
+      <div class="menu-buttons-row">
+        <button id="btn-start-game" class="ward-btn yellow-main">START</button>
+        <div class="coop-wrap">
+          <span class="chaos-tag" id="tier-tag">AUTO DIAGNOSTIC</span>
+          <button id="btn-mode-cycle" class="ward-btn pink-sub">🎯 TAKE QUIZ</button>
+        </div>
+      </div>
+
+      <div class="sub-pills-row">
+        <button class="ward-pill" id="btn-how">ℹ️ How to play</button>
+        <button class="ward-pill" id="btn-notebook">📓 Idea Cards <span class="rm-tag" id="hud-cards-pill">0 / 3</span></button>
+        <button class="ward-pill" id="btn-wallet">💳 SiswaPay <span class="rm-tag" id="hud-rm-pill">RM 15.00</span></button>
+        <button class="ward-pill" id="btn-xp">⭐ Score <span class="rm-tag" id="hud-xp-pill">120 XP</span></button>
+        <button class="ward-pill" id="btn-bgm">🎵 BGM: <span class="rm-tag" id="hud-bgm-label">ON</span></button>
+      </div>
+    </div>
+
+    <!-- TOP-RIGHT WARDRUN "EXPLORE / MISSION" TOGGLE PILL & QUEST CHECKLIST -->
+    <div id="top-right-hud">
+      <div class="explore-toggle-pill" id="btn-toggle-title" title="Click to toggle Title Menu / HUD">
+        <div>
+          <div class="et-title" id="mode-label">TIER: NOT TESTED YET</div>
+          <div class="et-sub" id="mode-sublabel">🎵 Track: Outdoor Funk</div>
+        </div>
+        <div class="toggle-switch active" id="hud-switch">
+          <div class="toggle-knob"></div>
+        </div>
+      </div>
+
+      <!-- COMPACT ACTIVE MISSIONS CARD -->
+      <div id="quest-tracker" class="sketch-card">
+        <div class="sketch-card-header">📋 MUET QUEST PROGRESSION</div>
+        <ul id="quest-list">
+          <li id="q-diag">🎯 <b>Step 1 (Placement):</b> Complete 3-Question <b>Diagnostic Quiz</b></li>
+          <li id="q-task1">🏢 <b>Step 2 (Part 1 Email):</b> Enter <b>HEPA Hub</b> (Grammar + Cohesive + Email)</li>
+          <li id="q-cards">🍛 <b>Step 3 (Gather Ideas):</b> Talk to <b>Makcik Kiah</b> &amp; <b>Oyen</b> (<span id="q-card-num">0</span>/2)</li>
+          <li id="q-peel">📚 <b>Step 4 (Idea Dev):</b> Build <b>PEEL Snowball</b> with <b>Mei Ling</b> at Library</li>
+          <li id="q-task2">🏛️ <b>Step 5 (Part 2 Essay):</b> Complete Final Essay at <b>Dewan Kuliah 3A</b></li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- FLOATING INTERACTION PROMPT -->
+    <div id="interact-prompt" class="hidden">
+      Press <kbd>E</kbd> or <kbd>Space</kbd> to talk
+    </div>
+
+    <!-- DIALOGUE BOX OVERLAY -->
+    <div id="dialogue-box" class="hidden">
+      <div class="dialogue-avatar" id="dlg-avatar">🧑‍🎓</div>
+      <div class="dialogue-content">
+        <div class="dialogue-name" id="dlg-name">NPC Name</div>
+        <div class="dialogue-text" id="dlg-text">Hello there!</div>
+        <div class="dialogue-actions" id="dlg-actions"></div>
+      </div>
+    </div>
+
+    <!-- =====================================================================
+         MODAL 0: 3-QUESTION DIAGNOSTIC PLACEMENT QUIZ (Auto-Calibrates Level!)
+         ===================================================================== -->
+    <div id="modal-diagnostic" class="modal-backdrop hidden">
+      <div class="sketch-modal" style="max-width: 680px;">
+        <div class="sketch-header teal-bar">
+          <span>🎯 MUET DIAGNOSTIC PLACEMENT QUIZ (3 QUICK QUESTIONS)</span>
+          <button class="close-btn" data-close="modal-diagnostic">✕</button>
+        </div>
+        <div style="padding: 18px; overflow-y: auto; display: flex; flex-direction: column; gap: 14px;">
+          <p style="font-size: 13.5px; color: #334155;">
+            Welcome to <b>Kolej 3A</b>! Let's check your current grammar, cohesive device, and idea development skills so the game can customize your difficulty level (<b>🌱 Foundation</b>, <b>🔥 Intermediate</b>, or <b>👑 Advanced</b>):
+          </p>
+          <div id="diag-questions-box" style="display: flex; flex-direction: column; gap: 12px;"></div>
+          <div id="diag-result-box" class="feedback-panel hidden"></div>
+          <div style="display: flex; justify-content: flex-end; gap: 10px;">
+            <button id="btn-finish-diag" class="ward-btn yellow-sm">CHECK MY LEVEL &amp; START 🚀</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- =====================================================================
+         MODAL 1: SMARTPHONE MODAL (MUET PART 1 — 3-STAGE QUEST CHAIN!)
+         Stage 1A: Grammar & Sentence Structure Fixer
+         Stage 1B: Cohesive Device Bridge
+         Stage 1C: Adaptive Email Reply (Foundation Cloze / Interm / Pro)
+         ===================================================================== -->
+    <div id="modal-part1" class="modal-backdrop hidden">
+      <div class="sketch-modal smartphone-frame">
+        <div class="sketch-header yellow-bar">
+          <span>📱 SISWAMAIL 5G — MUET PART 1 QUEST CHAIN</span>
+          <button class="close-btn" data-close="modal-part1">✕</button>
+        </div>
+
+        <!-- STAGE TABS -->
+        <div class="stage-tabs">
+          <button class="stage-tab active" id="tab-p1-s1" onclick="switchPart1Stage(1)">1️⃣ Stage 1A: Grammar Fixer</button>
+          <button class="stage-tab" id="tab-p1-s2" onclick="switchPart1Stage(2)">2️⃣ Stage 1B: Cohesive Devices</button>
+          <button class="stage-tab" id="tab-p1-s3" onclick="switchPart1Stage(3)">3️⃣ Stage 1C: Reply Email (100w)</button>
+        </div>
+
+        <!-- STAGE 1A: MANGLISH & SENTENCE STRUCTURE FIXER -->
+        <div id="p1-stage-1" class="stage-pane">
+          <div class="topic-card">
+            <h4>🛠️ Mission 1A: Fix the Broken Club Drafts (Grammar &amp; Sentence Structure)</h4>
+            <p>Aiman's committee members wrote these 3 broken sentences for the <i>Campus Wellness Festival</i> email. Pick the <b>grammatically correct &amp; well-structured</b> sentence for each one!</p>
+          </div>
+          <div id="grammar-fixer-list" class="quiz-stack"></div>
+          <div id="grammar-feedback" class="feedback-panel hidden"></div>
+          <div style="display:flex; justify-content:flex-end;">
+            <button class="ward-btn yellow-sm" id="btn-Verify-grammar">VERIFY GRAMMAR &amp; UNLOCK STAGE 1B ➡️</button>
+          </div>
+        </div>
+
+        <!-- STAGE 1B: COHESIVE DEVICE BRIDGE -->
+        <div id="p1-stage-2" class="stage-pane hidden">
+          <div class="topic-card">
+            <h4>🔗 Mission 1B: Cohesive Device Bridge (Linking Ideas Smoothly)</h4>
+            <p>To score high in <b>Communicative Achievement &amp; Organisation</b>, you must connect your sentences using appropriate <b>Cohesive Devices</b>. Choose the best linker for each email sentence!</p>
+          </div>
+          <div id="cohesive-fixer-list" class="quiz-stack"></div>
+          <div id="cohesive-feedback" class="feedback-panel hidden"></div>
+          <div style="display:flex; justify-content:flex-end;">
+            <button class="ward-btn yellow-sm" id="btn-verify-cohesive">VERIFY LINKERS &amp; UNLOCK EMAIL REPLY ➡️</button>
+          </div>
+        </div>
+
+        <!-- STAGE 1C: ADAPTIVE EMAIL REPLY -->
+        <div id="p1-stage-3" class="phone-body hidden">
+          <div class="incoming-email">
+            <div class="email-meta">
+              <strong>From:</strong> Aiman (President, Kelab Rekreasi)<br/>
+              <strong>Subject:</strong> Planning Our Upcoming Campus Wellness Festival!
+            </div>
+            <div class="email-content">
+              <p>Hey! Hope your mid-sem prep is going well. Our club is organizing the <b>Campus Wellness Festival</b> next month, and I really need your input!</p>
+              <p class="prompt-note">📌 <b>Note 1 (Express Excitement):</b> Tell Aiman how excited you are to co-organize this event.</p>
+              <p>Should we host a <b>Charity Fun Run</b> or a <b>Mental Health Workshop</b> at Dataran Canselori?</p>
+              <p class="prompt-note">📌 <b>Note 2 (Give Preference &amp; Reason):</b> Choose ONE activity and explain why students will love it.</p>
+              <p>Also, how can we attract more first-year students to join?</p>
+              <p class="prompt-note">📌 <b>Note 3 (Suggest Promotion):</b> Suggest a fun way to promote the festival or reward participants.</p>
+            </div>
+          </div>
+
+          <div class="writing-workspace">
+            <div class="scaffold-box" id="part1-tier-banner">
+              <div class="scaffold-title" id="part1-tier-title">🔥 Adaptive Support Active</div>
+              <div class="chip-group" id="part1-chips-box">
+                <button class="phrase-chip" data-target="part1-input" data-text="Hi Aiman,\n\nI am thrilled to hear about the upcoming Campus Wellness Festival and cannot wait to collaborate with you! ">✨ Greeting + Note 1</button>
+                <button class="phrase-chip" data-target="part1-input" data-text="With regard to the main activity, I strongly reckon we should organize the Charity Fun Run. This is mainly because it allows students to de-stress outdoors after exhausting lectures. ">🏃 Note 2 + Linker</button>
+                <button class="phrase-chip" data-target="part1-input" data-text="Furthermore, to attract more first-year students, why don't we offer free e-merit points and viral food truck vouchers? ">🎁 Note 3 + Linker</button>
+                <button class="phrase-chip" data-target="part1-input" data-text="\n\nLet's catch up over teh tarik at Kafe Siswa later to finalize the details!\n\nBest wishes,\nAlex">👋 Sign-off</button>
+              </div>
+              <button id="btn-load-template-p1" class="ward-pill" style="margin-top:8px; background:#fef08a;">📝 Load Guided Cloze Template (For Foundation Students)</button>
+            </div>
+
+            <textarea id="part1-input" placeholder="Write your 100+ word email reply here using cohesive devices (e.g., Furthermore, With regard to, This is because)..."></textarea>
+
+            <div class="workspace-footer">
+              <div class="live-metrics">
+                <span id="p1-word-count" class="metric-badge">0 / 100 words</span>
+                <span id="p1-note1-check" class="check-pill">⬜ Note 1</span>
+                <span id="p1-note2-check" class="check-pill">⬜ Note 2</span>
+                <span id="p1-note3-check" class="check-pill">⬜ Note 3</span>
+                <span id="p1-cohesive-check" class="check-pill">🔗 Linkers: 0</span>
+              </div>
+              <button class="ward-btn yellow-sm" id="btn-submit-part1">SEND EMAIL 🚀</button>
+            </div>
+
+            <div id="part1-feedback" class="feedback-panel hidden"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- =====================================================================
+         MODAL 2: PEEL IDEA SNOWBALL LAB (With Mei Ling at Library!)
+         Turns a 4-word basic thought into a 70-word Band 5.0 PEEL Paragraph!
+         ===================================================================== -->
+    <div id="modal-peel" class="modal-backdrop hidden">
+      <div class="sketch-modal" style="max-width: 860px;">
+        <div class="sketch-header teal-bar">
+          <span>📚 MEI LING'S "PEEL IDEA SNOWBALL" LAB — IDEA DEVELOPMENT TRAINER</span>
+          <button class="close-btn" data-close="modal-peel">✕</button>
+        </div>
+        <div class="stage-pane">
+          <div class="topic-card">
+            <h4>⛄ How to Turn a Short Idea into a 70-Word Academic Paragraph!</h4>
+            <p>Many students get stuck in MUET Part 2 because they write one short sentence (e.g. <i>"Cashless is fast"</i>) and run out of ideas. Answer the <b>4 PEEL Guiding Questions</b> below to watch your idea snowball into a full Band 5.0 paragraph!</p>
+          </div>
+
+          <div id="peel-builder-steps" class="quiz-stack"></div>
+
+          <div class="topic-card" style="background:#fef9c3;">
+            <h4>✨ Your Live Snowballed Paragraph (<span id="snowball-word-count">0</span> words):</h4>
+            <p id="snowball-preview" style="font-size:14px; font-weight:700; color:#0f172a; margin-top:4px;">Select options above to grow your paragraph!</p>
+          </div>
+
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span id="peel-status-msg" style="font-size:12.5px; font-weight:800; color:#065f46;"></span>
+            <button class="ward-btn yellow-sm" id="btn-save-snowball">💾 SAVE PARAGRAPH TO MY ESSAY &amp; EARN +60 XP</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- =====================================================================
+         MODAL 3: ESSAY ARENA MODAL (MUET PART 2: EXTENDED WRITING)
+         ===================================================================== -->
+    <div id="modal-part2" class="modal-backdrop hidden">
+      <div class="sketch-modal essay-frame">
+        <div class="sketch-header pink-bar">
+          <span>🏛️ DEWAN KULIAH 3A — MUET PART 2 EXTENDED ESSAY (250+ WORDS)</span>
+          <button class="close-btn" data-close="modal-part2">✕</button>
+        </div>
+        <div class="essay-body">
+          <div class="essay-sidebar">
+            <div class="topic-card">
+              <h4>📜 Essay Motion</h4>
+              <p><i>"Universities in Malaysia should go 100% cashless on campus."</i> Do you agree or disagree? Justify your opinion with relevant examples (at least 250 words).</p>
+            </div>
+
+            <div class="collected-cards-box">
+              <h4>🃏 Collected Campus Idea Cards &amp; PEEL</h4>
+              <p class="small-hint">Click any unlocked card below to insert its developed PEEL argument into your essay!</p>
+              <div id="essay-cards-list"></div>
+            </div>
+
+            <div class="peel-guide">
+              <h4>🧱 Idea Development Prompts (Click to Insert)</h4>
+              <div class="chip-group">
+                <button class="phrase-chip" data-target="part2-input" data-text="In this era of rapid digitalization, transitioning to a cashless campus has sparked intense debate. Personally, I strongly agree that universities should embrace digital payments due to enhanced efficiency, financial tracking, and security.\n\n">🎯 Intro + Thesis Statement</button>
+                <button class="phrase-chip" data-target="part2-input" data-text="First and foremost, adopting e-wallets significantly reduces waiting times. This is because students no longer need to count physical notes. For example, at Kafe Siswa, scanning a QR code takes seconds. Consequently, students can attend lectures on time.\n\n">🧱 Body 1 (PEEL: Efficiency)</button>
+                <button class="phrase-chip" data-target="part2-input" data-text="On the other hand, critics argue that Wi-Fi dead zones may disrupt digital transactions. Nevertheless, universities can easily overcome this by upgrading campus routers and maintaining a backup reload kiosk.\n\n">⚖️ Counter-Argument + Rebuttal</button>
+                <button class="phrase-chip" data-target="part2-input" data-text="In conclusion, going cashless brings undeniable convenience and safety to campus life. Therefore, Malaysian universities should spearhead this digital transformation for a smarter future.">🏁 Conclusion</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="essay-editor-col">
+            <textarea id="part2-input" placeholder="Develop your essay here: Introduction (Hook + Thesis), Body Paragraph 1 (PEEL), Body Paragraph 2 (PEEL), Counter-Argument, and Conclusion..."></textarea>
+            <div class="workspace-footer">
+              <div class="live-metrics">
+                <span id="p2-word-count" class="metric-badge">0 / 250 words</span>
+                <span id="p2-linker-count" class="check-pill">🔗 Linkers: 0</span>
+                <span id="p2-vocab-count" class="check-pill">💎 Vocab: 0</span>
+              </div>
+              <button class="ward-btn yellow-sm" id="btn-submit-part2">SUBMIT ESSAY 🎓</button>
+            </div>
+            <div id="part2-feedback" class="feedback-panel hidden"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- NOTEBOOK / HOW TO PLAY MODAL -->
+    <div id="modal-notebook" class="modal-backdrop hidden">
+      <div class="sketch-modal notebook-frame">
+        <div class="sketch-header teal-bar">
+          <span>📓 CAMPUS LOCKER, DIAGNOSTIC TIER &amp; IDEA CARDS</span>
+          <button class="close-btn" data-close="modal-notebook">✕</button>
+        </div>
+        <div class="notebook-body" id="notebook-content"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="game.js"></script>
+</body>
+</html>
