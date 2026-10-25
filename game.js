@@ -1047,6 +1047,78 @@ if (bgmBtn) {
   bgmBtn.addEventListener("click", () => soundEngine.toggle());
 }
 
+// ============================================================================
+// MOBILE / TOUCHSCREEN CONTROLS (D-Pad Buttons + Direct Canvas Drag-to-Walk!)
+// ============================================================================
+document.querySelectorAll("#touch-controls [data-key]").forEach((btn) => {
+  const k = btn.dataset.key;
+  const press = (e) => {
+    e.preventDefault();
+    soundEngine.init();
+    keys[k] = true;
+    btn.classList.add("pressed");
+    if (!activeModal && state.titleVisible) setTitleOverlay(false);
+  };
+  const release = (e) => {
+    e.preventDefault();
+    keys[k] = false;
+    btn.classList.remove("pressed");
+  };
+  btn.addEventListener("pointerdown", press);
+  btn.addEventListener("pointerup", release);
+  btn.addEventListener("pointercancel", release);
+  btn.addEventListener("pointerleave", release);
+});
+
+const touchTalkBtn = document.getElementById("btn-touch-talk");
+if (touchTalkBtn) {
+  touchTalkBtn.addEventListener("pointerdown", (e) => {
+    e.preventDefault();
+    soundEngine.init();
+    soundEngine.playClickSfx();
+    if (!activeModal && state.titleVisible) setTitleOverlay(false);
+    tryInteract();
+  });
+}
+
+// Direct Canvas Touch / Swipe Joystick (Drag finger anywhere on canvas to walk!)
+let touchDrag = { active: false, startX: 0, startY: 0, dx: 0, dz: 0 };
+
+canvas.addEventListener("pointerdown", (e) => {
+  if (activeModal) return;
+  soundEngine.init();
+  touchDrag.active = true;
+  touchDrag.startX = e.clientX;
+  touchDrag.startY = e.clientY;
+  touchDrag.dx = 0;
+  touchDrag.dz = 0;
+});
+
+canvas.addEventListener("pointermove", (e) => {
+  if (!touchDrag.active || activeModal) return;
+  const diffX = e.clientX - touchDrag.startX;
+  const diffY = e.clientY - touchDrag.startY;
+  if (Math.hypot(diffX, diffY) > 12) {
+    if (state.titleVisible) setTitleOverlay(false);
+    touchDrag.dx = Math.max(-1, Math.min(1, diffX / 45));
+    touchDrag.dz = Math.max(-1, Math.min(1, -diffY / 45));
+  } else {
+    touchDrag.dx = 0;
+    touchDrag.dz = 0;
+  }
+});
+
+window.addEventListener("pointerup", () => {
+  touchDrag.active = false;
+  touchDrag.dx = 0;
+  touchDrag.dz = 0;
+});
+window.addEventListener("pointercancel", () => {
+  touchDrag.active = false;
+  touchDrag.dx = 0;
+  touchDrag.dz = 0;
+});
+
 function setTitleOverlay(show) {
   state.titleVisible = show;
   const overlay = document.getElementById("title-overlay");
@@ -1111,6 +1183,11 @@ function update(dt) {
   if (keys["KeyD"] || keys["ArrowRight"]) dx += 1;
   if (keys["KeyW"] || keys["ArrowUp"]) dz += 1;
   if (keys["KeyS"] || keys["ArrowDown"]) dz -= 1;
+
+  if (dx === 0 && dz === 0 && touchDrag.active) {
+    dx = touchDrag.dx;
+    dz = touchDrag.dz;
+  }
 
   if (dx !== 0 || dz !== 0) {
     const len = Math.hypot(dx, dz);

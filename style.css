@@ -785,3 +785,143 @@ textarea {
   accent-color: var(--ink);
   transform: scale(1.15);
 }
+
+/* =========================================================================
+   ON-SCREEN MOBILE / TOUCHSCREEN GAMEPAD & RESPONSIVE PHONE LAYOUT
+   ========================================================================= */
+#gameCanvas {
+  touch-action: none;
+}
+
+#touch-controls {
+  position: absolute;
+  bottom: 18px;
+  left: 18px;
+  right: 18px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  z-index: 30;
+  pointer-events: none;
+}
+
+.dpad-cluster {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  pointer-events: auto;
+}
+
+.dpad-mid-row {
+  display: flex;
+  gap: 6px;
+}
+
+.action-cluster {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+  pointer-events: auto;
+}
+
+.t-btn {
+  width: 56px;
+  height: 56px;
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--ink);
+  border: 3px solid var(--ink);
+  border-radius: 14px;
+  box-shadow: 3px 4px 0px var(--ink);
+  font-size: 22px;
+  font-weight: 900;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: none;
+}
+
+.t-btn:active, .t-btn.pressed {
+  background: var(--ward-yellow);
+  transform: translate(2px, 2px);
+  box-shadow: 1px 2px 0px var(--ink);
+}
+
+.t-sprint {
+  width: auto;
+  height: 44px;
+  padding: 0 14px;
+  font-family: 'Segoe UI', sans-serif;
+  font-size: 13px;
+  background: var(--ward-pink);
+}
+
+.t-talk {
+  width: auto;
+  height: 54px;
+  padding: 0 18px;
+  font-family: 'Segoe UI', sans-serif;
+  font-size: 14px;
+  background: var(--ward-yellow);
+}
+
+/* Mobile / Phone Screen Adjustments */
+@media (max-width: 768px) {
+  #minimap-card {
+    width: calc(100vw - 24px);
+    left: 12px;
+    top: 8px;
+  }
+
+  #top-right-hud {
+    top: 96px;
+    right: 12px;
+  }
+
+  #quest-tracker {
+    display: none; /* Hide checklist by default on small phone screens so 3D world is clear; toggleable via HUD */
+  }
+
+  #title-overlay {
+    top: 155px;
+    left: 14px;
+    right: 14px;
+    max-width: calc(100vw - 28px);
+  }
+
+  .block-letters span {
+    width: 36px;
+    height: 46px;
+    font-size: 24px;
+  }
+
+  .yellow-main {
+    font-size: 18px;
+    padding: 12px 28px;
+  }
+
+  .pink-sub {
+    font-size: 13px;
+    padding: 13px 16px;
+  }
+
+  .phone-body, .essay-body {
+    grid-template-columns: 1fr;
+  }
+
+  #dialogue-box {
+    bottom: 150px;
+    padding: 12px 14px;
+  }
+
+  #interact-prompt {
+    bottom: 155px;
+    font-size: 12px;
+    width: max-content;
+    max-width: 90vw;
+  }
+}

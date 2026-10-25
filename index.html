@@ -82,7 +82,24 @@
 
     <!-- FLOATING INTERACTION PROMPT -->
     <div id="interact-prompt" class="hidden">
-      Press <kbd>E</kbd> or <kbd>Space</kbd> to talk
+      Press <kbd>E</kbd> / <kbd>Space</kbd> or Tap 💬 to talk
+    </div>
+
+    <!-- ON-SCREEN MOBILE / TOUCHSCREEN GAMEPAD (D-PAD + TALK & SPRINT BUTTONS) -->
+    <div id="touch-controls">
+      <div class="dpad-cluster">
+        <button class="t-btn t-up" data-key="KeyW" aria-label="Move Forward">⬆️</button>
+        <div class="dpad-mid-row">
+          <button class="t-btn t-left" data-key="KeyA" aria-label="Move Left">⬅️</button>
+          <button class="t-btn t-down" data-key="KeyS" aria-label="Move Back">⬇️</button>
+          <button class="t-btn t-right" data-key="KeyD" aria-label="Move Right">➡️</button>
+        </div>
+      </div>
+
+      <div class="action-cluster">
+        <button class="t-btn t-sprint" id="btn-touch-sprint" data-key="ShiftLeft">⚡ SPRINT</button>
+        <button class="t-btn t-talk" id="btn-touch-talk">💬 TALK / ENTER</button>
+      </div>
     </div>
 
     <!-- DIALOGUE BOX OVERLAY -->
